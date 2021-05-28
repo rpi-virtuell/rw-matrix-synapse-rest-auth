@@ -103,7 +103,7 @@ class MatrixSynapseRESTAuthAPI extends   WP_REST_Controller {
 			$user = $requestObj->user->id;
 			$mxid = $user;
 			$user = substr( $user, 1, strpos( $user, ':' ) -1);
-			$password= $requestObj->user->password;
+			$password= addslashes($requestObj->user->password);
 
 			$LoginUser = wp_authenticate( $user, $password );
 			if ( !is_wp_error( $LoginUser ) ) {
