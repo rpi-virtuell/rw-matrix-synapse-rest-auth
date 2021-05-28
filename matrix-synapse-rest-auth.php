@@ -4,7 +4,7 @@
  * Plugin URI:       https://github.com/rpi-virtuell/rw-matrix-synapse-rest-auth
  * Description:	     REST Endpoint for https://github.com/kamax-matrix/matrix-synapse-rest-auth to login with WordPress User into a Matrix Homeserver
  * Author:           Frank Neumann-Staude
- * Version:          1.0.0
+ * Version:          1.0.1
  * Licence:          GPLv3
  * Author URI:       http://staude.net
  * GitHub Plugin URI: https://github.com/rpi-virtuell/rw-matrix-synapse-rest-auth
