@@ -36,7 +36,6 @@ class MatrixSynapseRESTAuth {
 		add_action( 'rest_api_init', 'register_matrixsynapse_rest_routes' );
 		add_action( 'init', array( 'MatrixSynapseRESTAuth', 'add_endpoint' ), 0 );
 		add_action( 'init', array( $this, 'on_action_do_matrix_login' ));
-		add_action( 'init', array( $this, 'on_action_mgetuser' ));
 	}
 
 
@@ -69,68 +68,37 @@ class MatrixSynapseRESTAuth {
 	}
 
 	/**
-     * redirects to Matrix login server id url param action=mlogin
-     *
+     * listen to url param action=mlogin
+	 *    optional: redirect=matrix location hash without "#"
+	 *
+	 * redirects to Matrix
+	 * calls matrix with params
+	 *   u=<matrixId>       :@user_login:rpi-virtuell.de
+	 *   token=<token>      :used as onetime password saved in user_meta matrix_login_hash
+	 *   redirect=<#/hash>  :matrix location hash
+	 *
      * @since 1.2.0
      * @action init
 	 */
 	public function on_action_do_matrix_login(){
-		if(is_user_logged_in() && isset($_GET['action'])&&'mlogin' === $_GET['action']){
-			$me = wp_get_current_user();
-            $hash = base64_encode(wp_generate_password(24));
-			update_user_meta($me->ID,'matrix_login_hash', $hash);
-            wp_redirect(MATRIX_HOMESERVER_URL.'/?token='.$hash);
-			die();
-		}elseif( isset($_GET['action'])&&'mlogin' === $_GET['action']){
-			wp_redirect(MATRIX_HOMESERVER_URL);
-            die();
-        }
-	}
-
-    public function on_action_mgetuser(){
-		if(is_user_logged_in() && isset($_POST['action'])&&'mgetuser' === $_POST['action'] && isset($_POST['token'])){
-
-			$return = ['success'=>false];
-
-			$token = $_POST['token'];
-			if(strlen($token)>1){
-				$users = get_users( array(
-					'meta_query' => array(
-						array(
-							'key'     => 'matrix_login_hash',
-							'value'   => $token,
-							'compare' => '=',
-						)
-					),
-				) );
-
-				if($users){
-					$user = $users[0];
-					$return=[
-						'success'=>true,
-						'mxid'=>$user->user_login,
-						'password'=> $token
-					];
-				}
+		if(isset($_GET['action'])&&'mlogin' === $_GET['action']){
+			$location_hash = '';
+			if(isset($_GET['location_hash'])){
+				$location_hash = '&redirect_to='.$_GET['location_hash'];
 			}
-			switch ($_SERVER['HTTP_ORIGIN']) {
-				case 'http://matrix.rpi-virtuell.de':
-
-					header('Access-Control-Allow-Origin: '.$_SERVER['HTTP_ORIGIN']);
-					header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
-					header('Access-Control-Max-Age: 1000');
-					header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
-
-				break;
+			if(is_user_logged_in()){
+				$me = wp_get_current_user();
+				$hash = base64_encode(wp_generate_password(24));
+				update_user_meta($me->ID,'matrix_login_hash', $hash);
+				wp_redirect(MATRIX_HOMESERVER_URL.'/?u='.$me->user_login.'&token='.$hash.$location_hash);
+				die();
+			}else{
+				wp_redirect(MATRIX_HOMESERVER_URL.$location_hash);
+				die();
 			}
-			header('Content-Type: application/json; charset=utf-8');
-			echo json_encode($return);
-			die();
+		}
 
-        }
 	}
-
-
 
 }
 
